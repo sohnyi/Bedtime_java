@@ -159,8 +159,8 @@ public class BedTimeDial extends View {
 
         mRadius = (shortWide - mStroke) / 2 - 8;
 
-        mSleepAngle = getSleepAngleByTime();
-        mWeakUpAngle = getWeakUpAngleByTime();
+        mSleepAngle = getAngleByTime(mSleepHr, mSleepMin);
+        mWeakUpAngle = getAngleByTime(mWeakUpHr, mWeakUpMin);
 
         mSleepX = getPosByAngle(mSleepAngle)[0];
         mSleepY = getPosByAngle(mSleepAngle)[1];
@@ -246,7 +246,7 @@ public class BedTimeDial extends View {
         mBedtimePaint.setShader(new SweepGradient(mCenterX, mCenterY, mGradientColors, mGradientPos));
         canvas.rotate(mDegrees, mCenterX, mCenterY);
         canvas.drawArc(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius,
-                mCenterY + mRadius, mSleepAngle - mDegrees, mSweepAngle % 360, false, mBedtimePaint);
+                mCenterY + mRadius, mSleepAngle - mDegrees, calPaintAngle(mSweepAngle), false, mBedtimePaint);
         canvas.restore();
 
         // 画睡觉时间点
@@ -362,54 +362,29 @@ public class BedTimeDial extends View {
         return true;
     }
 
+    /** PRIVATE METHOD ************************************************************************/
+
     /**
-     * PUBLIC METHOD
-     *****************************************************************************/
-
-    public float getSleepAngleByTime() {
-        float angle;
-        if (mSleepHr < 0 || mSleepHr > 23) {
-            mSleepHr = 0;
+     * @return the hour and minute angles
+     */
+    private float getAngleByTime(float hr, float min) {
+        if (hr < 0 || hr > 23) {
+            hr = 0;
         }
 
-        if (mSleepMin < 0) {
-            mSleepMin = 0;
-        } else if (mSleepMin > 55) {
-            mSleepHr += 1; // 小时进 1 位
-            mSleepMin = 0;
+        if (min < 0) {
+            min = 0;
+        } else if (min > 55) {
+            hr += 1;
+            min = 0;
         } else {
-            mSleepMin = (mSleepMin + 2) / 5 * 5; // 分钟的最小刻为 5 .
+            min = (min + 2) / 5 * 5; // set the minimum scale for the minutes to 5.
         }
 
-        angle = mSleepHr * 30 - 90;
-        angle += mSleepMin * 0.5f;
-        return angle % 720;
+        float angle = hr * 30 - 90; // 30 degrees per hour and coordinate with the clock have 90 degree difference
+        angle += min * 0.5f;
+        return angle;
     }
-
-    public float getWeakUpAngleByTime() {
-
-        float angle;
-
-        if (mWeakUpHr < 0 || mWeakUpHr > 23) {
-            mWeakUpHr = 0;
-        }
-
-        if (mWeakUpMin < 0) {
-            mWeakUpMin = 0;
-        } else if (mWeakUpMin > 55) {
-            mWeakUpHr += 1; // 小时进 1 位
-            mWeakUpMin = 0;
-        } else {
-            mWeakUpMin = (mWeakUpMin + 2) / 5 * 5; // 分钟的最小刻为 5 .
-        }
-
-        angle = mWeakUpHr * 30 - 90;
-        angle += mWeakUpMin * 0.5f;
-        return angle % 720;
-    }
-
-
-    /** PRIVATE METHOD ****************************************************************************/
 
 
     /**
@@ -438,7 +413,7 @@ public class BedTimeDial extends View {
     }
 
     /**
-     * 是否可以失眠时间带拖动
+     * 是否可以拖动睡眠时间带
      *
      * @param x 触摸点 X 坐标
      * @param y 触摸点 Y 坐标
@@ -481,6 +456,20 @@ public class BedTimeDial extends View {
             return 720 - (startAngle - endAngle);
         } else {
             return endAngle - startAngle;
+        }
+    }
+
+    /**
+     * @param sweepAngle 划过的角度
+     * @return 绘制的角度
+     */
+    private float calPaintAngle(float sweepAngle) {
+        if (sweepAngle == 0) {
+            return 0;
+        } else if ((sweepAngle == 360) || (sweepAngle == 720)) {
+            return 360;
+        } else {
+            return sweepAngle % 360;
         }
     }
 
