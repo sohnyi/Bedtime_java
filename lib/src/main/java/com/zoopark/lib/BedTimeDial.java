@@ -32,7 +32,6 @@ public class BedTimeDial extends View {
 
     private Paint mDialPaint; // 表盘画笔
     private Paint mBedtimePaint; // 睡眠时间带画笔
-    private Paint mSleepPaint; // 睡觉时间设定按钮画笔
     private Paint mSleepFillPaint;
     private Paint mWeakPaint; // 起床时间设定按钮画笔
     private Paint mTextNumPaint; // 睡眠时长数字画笔
