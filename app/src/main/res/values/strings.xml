@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Bedtime</string>
+    <string name="sleep_time_text">就寝: %1$02d:%2$02d</string>
+    <string name="getup_time_text">起床: %1$02d:%2$02d</string>
+</resources>

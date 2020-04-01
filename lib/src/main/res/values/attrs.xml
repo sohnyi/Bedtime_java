@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="BedTimeDial">
+        <attr name="btd_stroke" format="dimension" />
+        <attr name="sleep_hr" format="integer" />
+        <attr name="sleep_min" format="integer" />
+        <attr name="weakUp_hr" format="integer" />
+        <attr name="weakUp_min" format="integer" />
+        <attr name="sleep_color" format="color|reference" />
+        <attr name="weakUp_color" format="color|reference" />
+        <attr name="sleepSrc" format="reference" />
+        <attr name="weakUpSrc" format="reference" />
+    </declare-styleable>
+
+</resources>
