@@ -55,7 +55,7 @@ public class BedTimeDial extends View {
     private Bitmap mWeakBtm;
     private int[] mGradientColors = new int[2];
     private float[] mGradientPos = new float[2];
-    private int[] mSleepTime = new int[2];
+    private int[] mBedTime = new int[2];
 
     private boolean isSleepTimeMove; // 是否为睡眠时间点移动
     private boolean isWeakTimeMove; // 是否为起床时间点移动
@@ -238,15 +238,37 @@ public class BedTimeDial extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // 画时钟表盘
+        //draw dial
         canvas.drawCircle(mCenterX, mCenterY, mRadius, mDialPaint);
+
+        // draw duration text
+        float hrWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[0]));
+        float unitHWidth = mTextUnitPaint.measureText("h");
+        float minWidth = 0;
+        float unitMWidth = 0;
+        if (mBedTime[1] > 0) {
+            minWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[1]));
+            unitMWidth = mTextUnitPaint.measureText("m");
+        }
+
+        float textWidth = hrWidth + unitHWidth + minWidth + unitMWidth;
+        float startX = mCenterX - 0.5f * textWidth;
+
+        canvas.drawText(String.valueOf(mBedTime[0]), startX, mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
+        canvas.drawText("h", startX + hrWidth, mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
+        if (mBedTime[1] > 0) {
+            canvas.drawText(String.valueOf(mBedTime[1]), startX + hrWidth + unitHWidth,
+                    mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
+            canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth,
+                    mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
+        }
 
         // 画睡眠时间段弧线
         canvas.save();
         mBedtimePaint.setShader(new SweepGradient(mCenterX, mCenterY, mGradientColors, mGradientPos));
         canvas.rotate(mDegrees, mCenterX, mCenterY);
         canvas.drawArc(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius,
-                mCenterY + mRadius, mSleepAngle - mDegrees, calPaintAngle(mSweepAngle), false, mBedtimePaint);
+                mCenterY + mRadius, mSleepAngle - mDegrees, calPaintAngle(mBedTime), false, mBedtimePaint);
         canvas.restore();
 
         // 画睡觉时间点
@@ -274,29 +296,6 @@ public class BedTimeDial extends View {
         canvas.drawBitmap(mWeakBtm, null, weakRect, weakPaint);
         canvas.restore();
         canvas.drawCircle(mWeakUpX, mWeakUpY, mStroke / 2 + 4, mWeakPaint);
-
-        // 画睡眠时长文字
-        setSleepTimes();
-        float hrWidth = mTextNumPaint.measureText(String.valueOf(mSleepTime[0]));
-        float unitHWidth = mTextUnitPaint.measureText("h");
-        float minWidth = 0;
-        float unitMWidth = 0;
-        if (mSleepTime[1] > 0) {
-            minWidth = mTextNumPaint.measureText(String.valueOf(mSleepTime[1]));
-            unitMWidth = mTextUnitPaint.measureText("m");
-        }
-
-        float textWidth = hrWidth + unitHWidth + minWidth + unitMWidth;
-        float startX = mCenterX - 0.5f * textWidth;
-
-        canvas.drawText("" + mSleepTime[0], startX, mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
-        canvas.drawText("h", startX + hrWidth, mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
-        if (mSleepTime[1] > 0) {
-            canvas.drawText("" + mSleepTime[1], startX + hrWidth + unitHWidth,
-                    mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
-            canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth,
-                    mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
-        }
 
     }
 
@@ -397,6 +396,8 @@ public class BedTimeDial extends View {
         mDegrees = getSweepOppositeAngle(mSleepAngle, mWeakUpAngle);
         mGradientPos[0] = (mSleepAngle - mDegrees + 360) % 360 / 360f;
         mGradientPos[1] = (mWeakUpAngle - mDegrees + 360) % 360 / 360f;
+
+        updateBedTime();
     }
 
     /**
@@ -460,23 +461,20 @@ public class BedTimeDial extends View {
     }
 
     /**
-     * @param sweepAngle 划过的角度
-     * @return 绘制的角度
+     * @return the angle need to pain of bedtime
      */
-    private float calPaintAngle(float sweepAngle) {
-        if (sweepAngle == 0) {
-            return 0;
-        } else if ((sweepAngle == 360) || (sweepAngle == 720)) {
+    private float calPaintAngle(int[] bedtime) {
+        if (bedtime[0] == 12 && bedtime[1] == 0) {
             return 360;
         } else {
-            return sweepAngle % 360;
+            return (bedtime[0] * 30 + bedtime[1] * 0.5f) % 360;
         }
     }
 
     /**
-     * 获取睡眠时间
+     * update the sleep and weak up time
      */
-    private void setSleepTimes() {
+    private void updateBedTime() {
         if (!isBedtimeMove) {
             int hr, min;
             int sleepH = getAngleTime(mSleepAngle)[0];
@@ -498,8 +496,8 @@ public class BedTimeDial extends View {
             if (hr < 0) {
                 hr += 24;
             }
-            mSleepTime[0] = hr;
-            mSleepTime[1] = min;
+            mBedTime[0] = hr;
+            mBedTime[1] = min;
         }
     }
 
