@@ -11,7 +11,6 @@ import android.graphics.Rect;
 import android.graphics.SweepGradient;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -418,7 +417,6 @@ public class BedTimeDial extends View {
      * 设置参数
      */
     private void setParams() {
-        Log.i("didi", "setParams: isBedtimeMove" + isBedtimeMove);
         if (!isBedtimeMove) {
             mSweepAngle = getSweepAngle(mSleepAngle, mWeakUpAngle);
         }
