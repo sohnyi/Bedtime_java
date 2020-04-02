@@ -111,33 +111,14 @@ public class BedTimeDial extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mWidth = MeasureSpec.getSize(widthMeasureSpec);
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        mHeight = MeasureSpec.getSize(heightMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
 
-        if (widthMode == MeasureSpec.UNSPECIFIED) {
-            widthMode = MeasureSpec.EXACTLY;
-            mWidth = DensityUtils.dp2px(mContext, DEFAULT_SIZE);
-        } else if (widthMode == MeasureSpec.AT_MOST) {
-            widthMode = MeasureSpec.EXACTLY;
-            mWidth = Math.min(DensityUtils.dp2px(mContext, DEFAULT_SIZE), mWidth);
-        }
-        if (heightMode == MeasureSpec.UNSPECIFIED) {
-            heightMode = MeasureSpec.EXACTLY;
-            mHeight = DensityUtils.dp2px(mContext, DEFAULT_SIZE);
-        } else if (heightMode == MeasureSpec.AT_MOST) {
-            heightMode = MeasureSpec.EXACTLY;
-            mHeight = Math.min(DensityUtils.dp2px(mContext, DEFAULT_SIZE), mHeight);
-        }
-
-        setMeasuredDimension(MeasureSpec.makeMeasureSpec(mWidth, widthMode),
-                MeasureSpec.makeMeasureSpec(mHeight, heightMode));
+        mWidth = getMeasuredWidth();
+        mHeight = getMeasuredHeight();
+        mCenterX = mWidth / 2.0f;
+        mCenterY = mHeight / 2.0f;
 
         init();
         initPain();
-        mCenterX = mWidth / 2.0f;
-        mCenterY = mHeight / 2.0f;
     }
 
     /**
@@ -211,16 +192,16 @@ public class BedTimeDial extends View {
 
 
         mTextNumPaint = new Paint();
-        int numTextSize = 72;
+        int numTextSize = 64;
         mTextNumPaint.setTextSize(DensityUtils.sp2px(mContext, numTextSize));
         mTextNumPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
 //        mTextNumPaint.setTextAlign(Paint.Align.CENTER);
         mTextNumPaint.setAntiAlias(true);
 
         mTextUnitPaint = new Paint();
-        int unitTextSize = 20;
+        int unitTextSize = 36;
         mTextUnitPaint.setTextSize(DensityUtils.sp2px(mContext, unitTextSize));
-        mTextUnitPaint.setColor(ContextCompat.getColor(mContext, android.R.color.darker_gray));
+        mTextUnitPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
         mTextUnitPaint.setAntiAlias(true);
 //        mTextUnitPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -257,9 +238,9 @@ public class BedTimeDial extends View {
         canvas.drawText(String.valueOf(mBedTime[0]), startX, mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
         canvas.drawText("h", startX + hrWidth, mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
         if (mBedTime[1] > 0) {
-            canvas.drawText(String.valueOf(mBedTime[1]), startX + hrWidth + unitHWidth,
+            canvas.drawText(String.valueOf(mBedTime[1]), startX + hrWidth + unitHWidth + 16,
                     mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
-            canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth,
+            canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth + 16,
                     mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
         }
 
