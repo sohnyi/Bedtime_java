@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.graphics.SweepGradient;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -24,9 +25,6 @@ import static android.view.MotionEvent.ACTION_UP;
  */
 
 public class BedTimeDial extends View {
-
-    private static final int DEFAULT_SIZE = 288;
-    private static final int DEFAULT_STROKE = 32;
 
     private Context mContext;
 
@@ -67,7 +65,6 @@ public class BedTimeDial extends View {
 
     private float mSleepAngle; // 睡觉时间点角度
     private float mWeakUpAngle; // 亲床时间点角度
-    private float mSweepAngle; // 睡眠时间带弧度
     private float mLastMoveAngle; // 上一次移动时的角度
     private float mDegrees; // 旋转的角度
 
@@ -89,7 +86,7 @@ public class BedTimeDial extends View {
         mChangedListener = (TimeChangedListener) mContext;
 
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.BedTimeDial);
-        mStroke = typedArray.getDimension(R.styleable.BedTimeDial_btd_stroke, DEFAULT_STROKE);
+        mStroke = typedArray.getDimension(R.styleable.BedTimeDial_btd_stroke, 0);
         mSleepColor = typedArray.getColor(R.styleable.BedTimeDial_sleep_color,
                 ContextCompat.getColor(mContext, android.R.color.holo_orange_dark));
         mWeakColor = typedArray.getColor(R.styleable.BedTimeDial_weakUp_color,
@@ -104,8 +101,6 @@ public class BedTimeDial extends View {
 
         mSleepResID = typedArray.getResourceId(R.styleable.BedTimeDial_sleepSrc, R.drawable.ic_sleep);
         mWeakResID = typedArray.getResourceId(R.styleable.BedTimeDial_weakUpSrc, R.drawable.ic_sun_up);
-
-        initPain();
     }
 
 
@@ -132,14 +127,13 @@ public class BedTimeDial extends View {
 
         int shortWide = Math.min(mWidth, mHeight);
 
-        mRadius = (Math.min(mWidth, mHeight) - mStroke) / 2;
-
-        if (mStroke <= 0 || mStroke > shortWide / 2) {
-            mStroke = Math.min(shortWide / 2, DensityUtils.dp2px(mContext, DEFAULT_STROKE));
+        if (mStroke <= 0) {
+            mStroke = shortWide / 8.0f;
+        } else if (mStroke > (shortWide / 6.0f)) {
+            mStroke = shortWide / 6.0f;
         }
 
-        mRadius = (shortWide - mStroke) / 2 - 8;
-
+        mRadius = (shortWide - mStroke) / 2;
         mSleepAngle = getAngleByTime(mSleepHr, mSleepMin);
         mWeakUpAngle = getAngleByTime(mWeakUpHr, mWeakUpMin);
 
@@ -148,8 +142,8 @@ public class BedTimeDial extends View {
         mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
         mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
 
+        initPain();
         setParams();
-
     }
 
     /**
@@ -371,9 +365,6 @@ public class BedTimeDial extends View {
      * 设置参数
      */
     private void setParams() {
-        if (!isBedtimeMove) {
-            mSweepAngle = getSweepAngle(mSleepAngle, mWeakUpAngle);
-        }
         mDegrees = getSweepOppositeAngle(mSleepAngle, mWeakUpAngle);
         mGradientPos[0] = (mSleepAngle - mDegrees + 360) % 360 / 360f;
         mGradientPos[1] = (mWeakUpAngle - mDegrees + 360) % 360 / 360f;
