@@ -11,7 +11,6 @@ import android.graphics.Rect;
 import android.graphics.SweepGradient;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -34,6 +33,16 @@ public class BedTimeDial extends View {
     private Paint mWeakPaint; // 起床时间设定按钮画笔
     private Paint mTextNumPaint; // 睡眠时长数字画笔
     private Paint mTextUnitPaint; // 睡眠时长单位画笔
+
+    private Path mSleepPath;
+    private Rect mSleepRect;
+    private Paint mSleepPain;
+
+    private Path mWeakPath;
+    private Rect mWeakReact;
+    private Paint mWeakPointPaint;
+
+    private SweepGradient mSweepGradient;
 
     // 可设定的值
     private int mWidth; // 视图宽度
@@ -142,8 +151,14 @@ public class BedTimeDial extends View {
         mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
         mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
 
+        mSleepPath = new Path();
+        mSleepRect = new Rect();
+
+        mWeakPath = new Path();
+        mWeakReact = new Rect();
+
         initPain();
-        setParams();
+        updateParams();
     }
 
     /**
@@ -165,6 +180,9 @@ public class BedTimeDial extends View {
         mBedtimePaint.setStrokeCap(Paint.Cap.ROUND);
         mBedtimePaint.setAntiAlias(true);
 
+        mSleepPain = new Paint();
+        mSleepPain.setAntiAlias(true);
+
 
         // 初始化睡觉时间点图片
         mSleepBtm = BitmapFactory.decodeResource(mContext.getResources(), mSleepResID);
@@ -184,12 +202,14 @@ public class BedTimeDial extends View {
         mWeakPaint.setColor(mWeakColor);
         mWeakPaint.setAntiAlias(true);
 
+        mWeakPointPaint = new Paint();
+        mWeakPointPaint.setAntiAlias(true);
+
 
         mTextNumPaint = new Paint();
         int numTextSize = 64;
         mTextNumPaint.setTextSize(DensityUtils.sp2px(mContext, numTextSize));
         mTextNumPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
-//        mTextNumPaint.setTextAlign(Paint.Align.CENTER);
         mTextNumPaint.setAntiAlias(true);
 
         mTextUnitPaint = new Paint();
@@ -197,7 +217,6 @@ public class BedTimeDial extends View {
         mTextUnitPaint.setTextSize(DensityUtils.sp2px(mContext, unitTextSize));
         mTextUnitPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
         mTextUnitPaint.setAntiAlias(true);
-//        mTextUnitPaint.setTextAlign(Paint.Align.CENTER);
 
         Paint.FontMetrics fontMetrics = mTextNumPaint.getFontMetrics();
         mNumTextHeight = fontMetrics.descent - fontMetrics.ascent;
@@ -205,7 +224,6 @@ public class BedTimeDial extends View {
         Rect bounds = new Rect();
         mTextNumPaint.getTextBounds("1", 0, 1, bounds);
         mNumTextHeight = bounds.height();
-
 
     }
 
@@ -240,7 +258,7 @@ public class BedTimeDial extends View {
 
         // 画睡眠时间段弧线
         canvas.save();
-        mBedtimePaint.setShader(new SweepGradient(mCenterX, mCenterY, mGradientColors, mGradientPos));
+        mBedtimePaint.setShader(mSweepGradient);
         canvas.rotate(mDegrees, mCenterX, mCenterY);
         canvas.drawArc(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius,
                 mCenterY + mRadius, mSleepAngle - mDegrees, calPaintAngle(mBedTime), false, mBedtimePaint);
@@ -248,27 +266,16 @@ public class BedTimeDial extends View {
 
         // 画睡觉时间点
         canvas.save();
-        Path sleepPath = new Path();
-        sleepPath.addCircle(mSleepX, mSleepY, mStroke / 2, Path.Direction.CW);
-        canvas.clipPath(sleepPath);
-        Rect sleepRect = new Rect((int) (mSleepX - mStroke / 2 - 1.5f), (int) (mSleepY - mStroke / 2 - 1.5f),
-                (int) (mSleepX + mStroke / 2 + 2.5f), (int) (mSleepY + mStroke / 2 + 2.5f));
-        Paint sleepPaint = new Paint();
-        sleepPaint.setAntiAlias(true);
-        canvas.drawBitmap(mSleepBtm, null, sleepRect, sleepPaint);
+
+        canvas.clipPath(mSleepPath);
+        canvas.drawBitmap(mSleepBtm, null, mSleepRect, mSleepPain);
         canvas.restore();
         canvas.drawCircle(mSleepX, mSleepY, mStroke / 2 + 4, mSleepFillPaint);
 
         // 画起床时间点
         canvas.save();
-        Path weakPath = new Path();
-        weakPath.addCircle(mWeakUpX, mWeakUpY, mStroke / 2, Path.Direction.CW);
-        canvas.clipPath(weakPath);
-        Rect weakRect = new Rect((int) (mWeakUpX - mStroke / 2 - 1.5f), (int) (mWeakUpY - mStroke / 2 - 1.5f),
-                (int) (mWeakUpX + mStroke / 2 + 2.5f), (int) (mWeakUpY + mStroke / 2 + 2.5f));
-        Paint weakPaint = new Paint();
-        weakPaint.setAntiAlias(true);
-        canvas.drawBitmap(mWeakBtm, null, weakRect, weakPaint);
+        canvas.clipPath(mWeakPath);
+        canvas.drawBitmap(mWeakBtm, null, mWeakReact, mWeakPointPaint);
         canvas.restore();
         canvas.drawCircle(mWeakUpX, mWeakUpY, mStroke / 2 + 4, mWeakPaint);
 
@@ -322,7 +329,7 @@ public class BedTimeDial extends View {
                 }
                 mLastMoveAngle = currentAngle;
                 if (isSleepTimeMove || isWeakTimeMove || isBedtimeMove) {
-                    setParams();
+                    updateParams();
                     invalidate();
                 }
                 break;
@@ -364,10 +371,23 @@ public class BedTimeDial extends View {
     /**
      * 设置参数
      */
-    private void setParams() {
+    private void updateParams() {
         mDegrees = getSweepOppositeAngle(mSleepAngle, mWeakUpAngle);
         mGradientPos[0] = (mSleepAngle - mDegrees + 360) % 360 / 360f;
         mGradientPos[1] = (mWeakUpAngle - mDegrees + 360) % 360 / 360f;
+        mSweepGradient = new SweepGradient(mCenterX, mCenterY, mGradientColors, mGradientPos);
+
+        mSleepPath.reset();
+        mSleepPath.addCircle(mSleepX, mSleepY, mStroke / 2, Path.Direction.CW);
+
+        mSleepRect.set((int) (mSleepX - mStroke / 2 - 1.5f), (int) (mSleepY - mStroke / 2 - 1.5f),
+                (int) (mSleepX + mStroke / 2 + 2.5f), (int) (mSleepY + mStroke / 2 + 2.5f));
+
+
+        mWeakPath.reset();
+        mWeakPath.addCircle(mWeakUpX, mWeakUpY, mStroke / 2, Path.Direction.CW);
+        mWeakReact.set((int) (mWeakUpX - mStroke / 2 - 1.5f), (int) (mWeakUpY - mStroke / 2 - 1.5f),
+                (int) (mWeakUpX + mStroke / 2 + 2.5f), (int) (mWeakUpY + mStroke / 2 + 2.5f));
 
         updateBedTime();
     }
