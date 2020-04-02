@@ -76,12 +76,15 @@ public class BedTimeDial extends View {
     private TimeChangedListener mChangedListener;
 
     public BedTimeDial(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public BedTimeDial(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+    }
 
+    public BedTimeDial(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         mContext = context;
         mChangedListener = (TimeChangedListener) mContext;
 
@@ -101,10 +104,8 @@ public class BedTimeDial extends View {
 
         mSleepResID = typedArray.getResourceId(R.styleable.BedTimeDial_sleepSrc, R.drawable.ic_sleep);
         mWeakResID = typedArray.getResourceId(R.styleable.BedTimeDial_weakUpSrc, R.drawable.ic_sun_up);
-    }
 
-    public BedTimeDial(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        initPain();
     }
 
 
@@ -117,14 +118,13 @@ public class BedTimeDial extends View {
         mCenterX = mWidth / 2.0f;
         mCenterY = mHeight / 2.0f;
 
-        init();
-        initPain();
+        initParams();
     }
 
     /**
      * 数据初始化
      */
-    private void init() {
+    private void initParams() {
 
         isSleepTimeMove = false;
         isWeakTimeMove = false;
