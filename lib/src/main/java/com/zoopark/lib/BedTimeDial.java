@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static android.view.MotionEvent.ACTION_CANCEL;
 import static android.view.MotionEvent.ACTION_DOWN;
 import static android.view.MotionEvent.ACTION_MOVE;
 import static android.view.MotionEvent.ACTION_UP;
@@ -110,46 +111,21 @@ public class BedTimeDial extends View {
 
         mSleepResID = typedArray.getResourceId(R.styleable.BedTimeDial_sleepSrc, R.drawable.ic_sleep);
         mWeakResID = typedArray.getResourceId(R.styleable.BedTimeDial_weakUpSrc, R.drawable.ic_sun_up);
+
+        typedArray.recycle();
+
+        init();
+        initPaint();
+
     }
 
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        mWidth = getMeasuredWidth();
-        mHeight = getMeasuredHeight();
-        mCenterX = mWidth / 2.0f;
-        mCenterY = mHeight / 2.0f;
-
-        initParams();
-    }
-
-    /**
-     * 数据初始化
-     */
-    private void initParams() {
-
+    private void init() {
         isSleepTimeMove = false;
         isWeakTimeMove = false;
         isBedtimeMove = false;
+    }
 
-        int shortWide = Math.min(mWidth, mHeight);
-
-        if (mStroke <= 0) {
-            mStroke = shortWide / 8.0f;
-        } else if (mStroke > (shortWide / 6.0f)) {
-            mStroke = shortWide / 6.0f;
-        }
-
-        mRadius = (shortWide - mStroke) / 2;
-        mSleepAngle = getAngleByTime(mSleepHr, mSleepMin);
-        mWeakUpAngle = getAngleByTime(mWeakUpHr, mWeakUpMin);
-
-        mSleepX = getPosByAngle(mSleepAngle)[0];
-        mSleepY = getPosByAngle(mSleepAngle)[1];
-        mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
-        mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
+    private void initPaint() {
 
         mSleepPath = new Path();
         mSleepRect = new Rect();
@@ -157,36 +133,22 @@ public class BedTimeDial extends View {
         mWeakPath = new Path();
         mWeakReact = new Rect();
 
-        initPain();
-        updateParams();
-    }
-
-    /**
-     * 画笔初始化
-     */
-    private void initPain() {
-
-        // 初始化表带画笔
         mDialPaint = new Paint();
         mDialPaint.setStyle(Paint.Style.STROKE);
-        mDialPaint.setStrokeWidth(mStroke);
         mDialPaint.setColor(ContextCompat.getColor(mContext, android.R.color.background_light));
         mDialPaint.setAntiAlias(true);
 
-        // 初始化睡眠时间带画笔
         mBedtimePaint = new Paint();
         mBedtimePaint.setStyle(Paint.Style.STROKE);
-        mBedtimePaint.setStrokeWidth(mStroke);
         mBedtimePaint.setStrokeCap(Paint.Cap.ROUND);
         mBedtimePaint.setAntiAlias(true);
+
+        mSleepBtm = BitmapFactory.decodeResource(mContext.getResources(), mSleepResID);
+        mSleepBtm = Bitmap.createScaledBitmap(mSleepBtm, (int) mStroke, (int) mStroke, false);
 
         mSleepPain = new Paint();
         mSleepPain.setAntiAlias(true);
 
-
-        // 初始化睡觉时间点图片
-        mSleepBtm = BitmapFactory.decodeResource(mContext.getResources(), mSleepResID);
-        mSleepBtm = Bitmap.createScaledBitmap(mSleepBtm, (int) mStroke, (int) mStroke, false);
 
         mSleepFillPaint = new Paint();
         mSleepFillPaint.setStyle(Paint.Style.STROKE);
@@ -194,8 +156,6 @@ public class BedTimeDial extends View {
         mSleepFillPaint.setColor(mSleepColor);
         mSleepFillPaint.setAntiAlias(true);
 
-        mWeakBtm = BitmapFactory.decodeResource(mContext.getResources(), mWeakResID);
-        mWeakBtm = Bitmap.createScaledBitmap(mWeakBtm, (int) mStroke, (int) mStroke, false);
         mWeakPaint = new Paint();
         mWeakPaint.setStyle(Paint.Style.STROKE);
         mWeakPaint.setStrokeWidth(8);
@@ -204,6 +164,10 @@ public class BedTimeDial extends View {
 
         mWeakPointPaint = new Paint();
         mWeakPointPaint.setAntiAlias(true);
+
+        mWeakBtm = BitmapFactory.decodeResource(mContext.getResources(), mWeakResID);
+        mWeakBtm = Bitmap.createScaledBitmap(mWeakBtm, (int) mStroke, (int) mStroke, false);
+
 
 
         mTextNumPaint = new Paint();
@@ -225,6 +189,55 @@ public class BedTimeDial extends View {
         mTextNumPaint.getTextBounds("1", 0, 1, bounds);
         mNumTextHeight = bounds.height();
 
+    }
+
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        mWidth = getMeasuredWidth();
+        mHeight = getMeasuredHeight();
+        mCenterX = mWidth / 2.0f;
+        mCenterY = mHeight / 2.0f;
+
+        initParams();
+
+    }
+
+    /**
+     * 数据初始化
+     */
+    private void initParams() {
+
+        int shortWide = Math.min(mWidth, mHeight);
+
+        if (mStroke <= 0) {
+            mStroke = shortWide / 8.0f;
+        } else if (mStroke > (shortWide / 6.0f)) {
+            mStroke = shortWide / 6.0f;
+        }
+
+        mRadius = (shortWide - mStroke) / 2;
+        mSleepAngle = getAngleByTime(mSleepHr, mSleepMin);
+        mWeakUpAngle = getAngleByTime(mWeakUpHr, mWeakUpMin);
+
+        mSleepX = getPosByAngle(mSleepAngle)[0];
+        mSleepY = getPosByAngle(mSleepAngle)[1];
+        mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
+        mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
+
+        updateParams();
+        updateBedTime();
+        updatePaint();
+    }
+
+    /**
+     * 画笔初始化
+     */
+    private void updatePaint() {
+        mDialPaint.setStrokeWidth(mStroke);
+        mBedtimePaint.setStrokeWidth(mStroke);
     }
 
     @Override
@@ -282,9 +295,15 @@ public class BedTimeDial extends View {
     }
 
     @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case ACTION_DOWN:
+                performClick();
                 mLastMoveAngle = getAngle(event.getX(), event.getY());
                 if (canDrag(event.getX(), event.getY(), mSleepX, mSleepY)) {
                     isSleepTimeMove = true;
@@ -300,40 +319,22 @@ public class BedTimeDial extends View {
                 float diffAngle = getDiffAngle(currentAngle, mLastMoveAngle);
                 if (isSleepTimeMove) {
                     // 睡觉时间点移动
-                    mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
-                    mSleepX = getPosByAngle(mSleepAngle)[0];
-                    mSleepY = getPosByAngle(mSleepAngle)[1];
-                    if (mChangedListener != null) {
-                        mChangedListener.onSleepTimeChanged(getAngleTime(mSleepAngle)[0], getAngleTime(mSleepAngle)[1]);
-                    }
+                    onSleepMoved(diffAngle);
                 } else if (isWeakTimeMove) {
                     // 起床时间点移动
-                    mWeakUpAngle = (mWeakUpAngle + diffAngle + 720) % 720;
-                    mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
-                    mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
-                    if (mChangedListener != null) {
-                        mChangedListener.onWeakUpTimeChanged(getAngleTime(mWeakUpAngle)[0], getAngleTime(mWeakUpAngle)[1]);
-                    }
+                    onWeakUpMoved(diffAngle);
                 } else if (isBedtimeMove) {
-                    // 睡眠时间段移动
-                    mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
-                    mWeakUpAngle = (mWeakUpAngle + diffAngle + 720) % 720;
-                    mSleepX = getPosByAngle(mSleepAngle)[0];
-                    mSleepY = getPosByAngle(mSleepAngle)[1];
-                    mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
-                    mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
-                    if (mChangedListener != null) {
-                        mChangedListener.onBedtimeChanged(getAngleTime(mSleepAngle)[0], getAngleTime(mSleepAngle)[1],
-                                getAngleTime(mWeakUpAngle)[0], getAngleTime(mWeakUpAngle)[1]);
-                    }
+                    onBedtimeMoved(diffAngle);
                 }
                 mLastMoveAngle = currentAngle;
                 if (isSleepTimeMove || isWeakTimeMove || isBedtimeMove) {
                     updateParams();
+                    updateBedTime();
                     invalidate();
                 }
                 break;
             case ACTION_UP:
+            case ACTION_CANCEL:
                 isSleepTimeMove = false;
                 isWeakTimeMove = false;
                 isBedtimeMove = false;
@@ -343,7 +344,55 @@ public class BedTimeDial extends View {
         return true;
     }
 
-    /** PRIVATE METHOD ************************************************************************/
+
+
+    /* PRIVATE METHOD ************************************************************************/
+
+
+    /* ON DRAW ******************/
+
+    /**
+     * @param diffAngle moved angle
+     * change the params after bedtime moved
+     */
+    private void onBedtimeMoved(float diffAngle) {
+        mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
+        mWeakUpAngle = (mWeakUpAngle + diffAngle + 720) % 720;
+        mSleepX = getPosByAngle(mSleepAngle)[0];
+        mSleepY = getPosByAngle(mSleepAngle)[1];
+        mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
+        mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
+        if (mChangedListener != null) {
+            mChangedListener.onBedtimeChanged(getAngleTime(mSleepAngle)[0], getAngleTime(mSleepAngle)[1],
+                    getAngleTime(mWeakUpAngle)[0], getAngleTime(mWeakUpAngle)[1]);
+        }
+    }
+
+    /**
+     * @param diffAngle moved angle
+     * change the params after weak up moved
+     */
+    private void onWeakUpMoved(float diffAngle) {
+        mWeakUpAngle = (mWeakUpAngle + diffAngle + 720) % 720;
+        mWeakUpX = getPosByAngle(mWeakUpAngle)[0];
+        mWeakUpY = getPosByAngle(mWeakUpAngle)[1];
+        if (mChangedListener != null) {
+            mChangedListener.onWeakUpTimeChanged(getAngleTime(mWeakUpAngle)[0], getAngleTime(mWeakUpAngle)[1]);
+        }
+    }
+
+    /**
+     * @param diffAngle moved angle
+     * change the params after sleep moved
+     */
+    private void onSleepMoved(float diffAngle) {
+        mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
+        mSleepX = getPosByAngle(mSleepAngle)[0];
+        mSleepY = getPosByAngle(mSleepAngle)[1];
+        if (mChangedListener != null) {
+            mChangedListener.onSleepTimeChanged(getAngleTime(mSleepAngle)[0], getAngleTime(mSleepAngle)[1]);
+        }
+    }
 
     /**
      * @return the hour and minute angles
@@ -372,6 +421,7 @@ public class BedTimeDial extends View {
      * 设置参数
      */
     private void updateParams() {
+
         mDegrees = getSweepOppositeAngle(mSleepAngle, mWeakUpAngle);
         mGradientPos[0] = (mSleepAngle - mDegrees + 360) % 360 / 360f;
         mGradientPos[1] = (mWeakUpAngle - mDegrees + 360) % 360 / 360f;
@@ -388,8 +438,6 @@ public class BedTimeDial extends View {
         mWeakPath.addCircle(mWeakUpX, mWeakUpY, mStroke / 2, Path.Direction.CW);
         mWeakReact.set((int) (mWeakUpX - mStroke / 2 - 1.5f), (int) (mWeakUpY - mStroke / 2 - 1.5f),
                 (int) (mWeakUpX + mStroke / 2 + 2.5f), (int) (mWeakUpY + mStroke / 2 + 2.5f));
-
-        updateBedTime();
     }
 
     /**
@@ -566,10 +614,6 @@ public class BedTimeDial extends View {
 
     /**
      * 获取睡眠时间中心点对面点角度
-     *
-     * @param sleepAngle
-     * @param weakUpAngle
-     * @return
      */
     private float getSweepOppositeAngle(float sleepAngle, float weakUpAngle) {
         float angle;
@@ -585,14 +629,10 @@ public class BedTimeDial extends View {
         return (angle + 180) % 360;
     }
 
-    /** 函数计算 ***********************************************************************************/
+    /* 函数计算 ******************************************************/
 
     /**
      * 获取反正切
-     *
-     * @param x
-     * @param y
-     * @return
      */
     private float getAtan2(float x, float y) {
         return (float) (Math.atan2(y - mCenterY, x - mCenterX));
