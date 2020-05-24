@@ -11,6 +11,9 @@
         <attr name="weakUp_color" format="color|reference" />
         <attr name="sleepSrc" format="reference" />
         <attr name="weakUpSrc" format="reference" />
+        <attr name="hasSleepText" format="boolean" />
+        <attr name="numTextSize" format="dimension" />
+        <attr name="unitTextSize" format="dimension" />
     </declare-styleable>
 
 </resources>

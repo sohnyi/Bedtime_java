@@ -9,8 +9,8 @@
 
     <com.zoopark.lib.BedTimeDial
         android:id="@+id/bedTimeDial"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         app:btd_stroke="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,7 +23,10 @@
         app:weakUpSrc="@drawable/ic_sun_up"
         app:weakUp_color="@color/g_end"
         app:weakUp_hr="7"
-        app:weakUp_min="0" />
+        app:weakUp_min="0"
+        app:numTextSize="48sp"
+        app:unitTextSize="36sp"
+        app:hasSleepText="true"/>
 
     <TextView
         android:id="@+id/sleep_tv"

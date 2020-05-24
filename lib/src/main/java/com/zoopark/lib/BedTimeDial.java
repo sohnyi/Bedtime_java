@@ -65,6 +65,15 @@ public class BedTimeDial extends View {
     // 起床时间_初始分钟值， 默认-0
     private int mWeakUpMin;
 
+    // 是否显示就寝时长文字
+    private boolean hasSleepText;
+
+    // 就寝时间数字字体大小
+    private float mNumTextSize;
+
+    // 就寝时间单位字体大小
+    private float mUnitTextSize;
+
     /* 画笔 ****************************************************************************************/
     // 表盘画笔
     private Paint mDialPaint;
@@ -157,6 +166,10 @@ public class BedTimeDial extends View {
         mSleepResID = typedArray.getResourceId(R.styleable.BedTimeDial_sleepSrc, R.drawable.ic_sleep);
         mWeakResID = typedArray.getResourceId(R.styleable.BedTimeDial_weakUpSrc, R.drawable.ic_sun_up);
 
+        hasSleepText = typedArray.getBoolean(R.styleable.BedTimeDial_hasSleepText, true);
+        mNumTextSize = typedArray.getDimension(R.styleable.BedTimeDial_numTextSize, 48f);
+        mUnitTextSize = typedArray.getDimension(R.styleable.BedTimeDial_unitTextSize, 36f);
+
         typedArray.recycle();
 
         init();
@@ -213,25 +226,24 @@ public class BedTimeDial extends View {
         mWeakBtm = BitmapFactory.decodeResource(mContext.getResources(), mWeakResID);
         mWeakBtm = Bitmap.createScaledBitmap(mWeakBtm, (int) mStroke, (int) mStroke, false);
 
+        if (hasSleepText) {
+            mTextNumPaint = new Paint();
+            mTextNumPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
+            mTextNumPaint.setAntiAlias(true);
 
-        mTextNumPaint = new Paint();
-        int numTextSize = 64;
-        mTextNumPaint.setTextSize(DensityUtils.sp2px(mContext, numTextSize));
-        mTextNumPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
-        mTextNumPaint.setAntiAlias(true);
+            mTextUnitPaint = new Paint();
+            mTextUnitPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
+            mTextUnitPaint.setAntiAlias(true);
 
-        mTextUnitPaint = new Paint();
-        int unitTextSize = 36;
-        mTextUnitPaint.setTextSize(DensityUtils.sp2px(mContext, unitTextSize));
-        mTextUnitPaint.setColor(ContextCompat.getColor(mContext, android.R.color.black));
-        mTextUnitPaint.setAntiAlias(true);
+            Paint.FontMetrics fontMetrics = mTextNumPaint.getFontMetrics();
+            mNumTextHeight = fontMetrics.descent - fontMetrics.ascent;
 
-        Paint.FontMetrics fontMetrics = mTextNumPaint.getFontMetrics();
-        mNumTextHeight = fontMetrics.descent - fontMetrics.ascent;
+            Rect bounds = new Rect();
+            mTextNumPaint.getTextBounds("1", 0, 1, bounds);
+            mNumTextHeight = bounds.height();
+        }
 
-        Rect bounds = new Rect();
-        mTextNumPaint.getTextBounds("1", 0, 1, bounds);
-        mNumTextHeight = bounds.height();
+
 
     }
 
@@ -242,6 +254,24 @@ public class BedTimeDial extends View {
 
         mWidth = getMeasuredWidth();
         mHeight = getMeasuredHeight();
+
+        // 处理就寝时间长度文字字体大小过大的情况
+         if (hasSleepText) {
+             if (DensityUtils.sp2px(mContext, mNumTextSize) > (mWidth / 4)) {
+                 mTextNumPaint.setTextSize(mWidth / 4.0f);
+                 mTextUnitPaint.setTextSize(mWidth / 8.0f);
+             } else {
+                 if (mUnitTextSize > mNumTextSize) {
+                     mUnitTextSize = mNumTextSize;
+                 }
+                 mTextNumPaint.setTextSize(DensityUtils.sp2px(mContext, mNumTextSize));
+                 mTextUnitPaint.setTextSize(DensityUtils.sp2px(mContext, mUnitTextSize));
+             }
+         }
+
+
+
+
         mCenterX = mWidth / 2.0f;
         mCenterY = mHeight / 2.0f;
         initParams();
@@ -289,29 +319,31 @@ public class BedTimeDial extends View {
         //draw dial
         canvas.drawCircle(mCenterX, mCenterY, mRadius, mDialPaint);
 
-        // draw duration text
-        float hrWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[0]));
-        float unitHWidth = mTextUnitPaint.measureText("h");
-        float minWidth = 0;
-        float unitMWidth = 0;
-        if (mBedTime[1] > 0) {
-            minWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[1]));
-            unitMWidth = mTextUnitPaint.measureText("m");
+        // 绘制就寝时长文字
+        if (hasSleepText) {
+            float hrWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[0]));
+            float unitHWidth = mTextUnitPaint.measureText("h");
+            float minWidth = 0;
+            float unitMWidth = 0;
+            if (mBedTime[1] > 0) {
+                minWidth = mTextNumPaint.measureText(String.valueOf(mBedTime[1]));
+                unitMWidth = mTextUnitPaint.measureText("m");
+            }
+
+            float textWidth = hrWidth + unitHWidth + minWidth + unitMWidth;
+            float startX = mCenterX - 0.5f * textWidth;
+
+            canvas.drawText(String.valueOf(mBedTime[0]), startX, mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
+            canvas.drawText("h", startX + hrWidth, mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
+            if (mBedTime[1] > 0) {
+                canvas.drawText(String.valueOf(mBedTime[1]), startX + hrWidth + unitHWidth + 16,
+                        mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
+                canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth + 16,
+                        mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
+            }
         }
 
-        float textWidth = hrWidth + unitHWidth + minWidth + unitMWidth;
-        float startX = mCenterX - 0.5f * textWidth;
-
-        canvas.drawText(String.valueOf(mBedTime[0]), startX, mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
-        canvas.drawText("h", startX + hrWidth, mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
-        if (mBedTime[1] > 0) {
-            canvas.drawText(String.valueOf(mBedTime[1]), startX + hrWidth + unitHWidth + 16,
-                    mCenterY + 0.25f * mNumTextHeight, mTextNumPaint);
-            canvas.drawText("m", startX + hrWidth + unitHWidth + minWidth + 16,
-                    mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
-        }
-
-        // 画就寝时间段弧线
+        // 绘制就寝时间段弧线
         canvas.save();
         mBedtimePaint.setShader(mSweepGradient);
         canvas.rotate(mDegrees, mCenterX, mCenterY);
@@ -319,14 +351,14 @@ public class BedTimeDial extends View {
                 mCenterY + mRadius, mSleepAngle - mDegrees, calPaintAngle(mBedTime), false, mBedtimePaint);
         canvas.restore();
 
-        // 画睡觉时间点
+        // 绘制睡觉时间点
         canvas.save();
         canvas.clipPath(mSleepPath);
         canvas.drawBitmap(mSleepBtm, null, mSleepRect, mSleepPain);
         canvas.restore();
         canvas.drawCircle(mSleepX, mSleepY, mStroke / 2 + 4, mSleepFillPaint);
 
-        // 画起床时间点
+        // 绘制起床时间点
         canvas.save();
         canvas.clipPath(mWeakPath);
         canvas.drawBitmap(mWeakBtm, null, mWeakReact, mWeakPointPaint);
