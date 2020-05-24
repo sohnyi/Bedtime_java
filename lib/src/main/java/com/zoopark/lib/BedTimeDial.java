@@ -336,11 +336,6 @@ public class BedTimeDial extends View {
     }
 
     @Override
-    public boolean performClick() {
-        return super.performClick();
-    }
-
-    @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case ACTION_DOWN:
@@ -383,7 +378,10 @@ public class BedTimeDial extends View {
         return true;
     }
 
-
+    @Override
+    public boolean performClick() {
+        return super.performClick();
+    }
 
     /* PRIVATE METHOD ************************************************************************/
 
