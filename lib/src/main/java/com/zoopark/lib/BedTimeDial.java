@@ -28,12 +28,59 @@ public class BedTimeDial extends View {
 
     private Context mContext;
 
-    private Paint mDialPaint; // 表盘画笔
-    private Paint mBedtimePaint; // 睡眠时间带画笔
+    /* xml设定的值 *********************************************************************************/
+    // 视图宽度
+    private int mWidth;
+
+    // 视图高度
+    private int mHeight;
+
+    // 睡眠时间带宽度
+    private float mStroke;
+
+    // 表盘半径
+    private float mRadius;
+
+    // 表盘渐变起始颜色
+    private int mSleepColor;
+
+    // 表盘渐变终点颜色
+    private int mWeakColor;
+
+    // 睡觉点图片
+    private int mSleepResID;
+
+    // 起床点图片
+    private int mWeakResID;
+
+    // 睡觉时间_初始小时值, 默认-23
+    private int mSleepHr;
+
+    // 睡觉时间_初始分钟值, 默认-0
+    private int mSleepMin;
+
+    // 起床时间_初始小时值， 默认-7
+    private int mWeakUpHr;
+
+    // 起床时间_初始分钟值， 默认-0
+    private int mWeakUpMin;
+
+    /* 画笔 ****************************************************************************************/
+    // 表盘画笔
+    private Paint mDialPaint;
+
+    // 睡眠时间带画笔
+    private Paint mBedtimePaint;
     private Paint mSleepFillPaint;
-    private Paint mWeakPaint; // 起床时间设定按钮画笔
-    private Paint mTextNumPaint; // 睡眠时长数字画笔
-    private Paint mTextUnitPaint; // 睡眠时长单位画笔
+
+    // 起床时间设定按钮画笔
+    private Paint mWeakPaint;
+
+    // 睡眠时长数字画笔
+    private Paint mTextNumPaint;
+
+    // 睡眠时长单位画笔
+    private Paint mTextUnitPaint;
 
     private Path mSleepPath;
     private Rect mSleepRect;
@@ -42,22 +89,8 @@ public class BedTimeDial extends View {
     private Path mWeakPath;
     private Rect mWeakReact;
     private Paint mWeakPointPaint;
-
     private SweepGradient mSweepGradient;
 
-    // 可设定的值
-    private int mWidth; // 视图宽度
-    private int mHeight; // 视图高度
-    private float mStroke; // 睡眠时间带宽度
-    private float mRadius; // 表盘半径
-    private int mSleepColor; // 表盘渐变起始颜色
-    private int mWeakColor; // 表盘渐变终点颜色
-    private int mSleepResID; // 睡觉点图片
-    private int mWeakResID; // 起床点图片
-    private int mSleepHr; // 睡觉时间_小时
-    private int mSleepMin; // 睡觉时间_分钟
-    private int mWeakUpHr; // 起床时间_小时
-    private int mWeakUpMin; // 起床时间_分钟
 
     private Bitmap mSleepBtm;
     private Bitmap mWeakBtm;
@@ -65,22 +98,34 @@ public class BedTimeDial extends View {
     private float[] mGradientPos = new float[2];
     private int[] mBedTime = new int[2];
 
-    private boolean isSleepTimeMove; // 是否为睡眠时间点移动
-    private boolean isWeakTimeMove; // 是否为起床时间点移动
-    private boolean isBedtimeMove; // 是否为睡眠时间带移动
+    // 是否为睡眠时间点移动
+    private boolean isSleepTimeMove;
+    // 是否为起床时间点移动
+    private boolean isWeakTimeMove;
+    // 是否为睡眠时间带移动
+    private boolean isBedtimeMove;
 
-    private float mCenterX, mCenterY; // 中心点位置
-    private float mSleepX, mSleepY; // 上一次睡觉设定的时间位置
-    private float mWeakUpX, mWeakUpY; // 上一次起床设定的时间位置
-
-    private float mSleepAngle; // 睡觉时间点角度
-    private float mWeakUpAngle; // 亲床时间点角度
-    private float mLastMoveAngle; // 上一次移动时的角度
-    private float mDegrees; // 旋转的角度
+    // 中心点坐标
+    private float mCenterX, mCenterY;
+    // 上一次睡觉设定的时间位置
+    private float mSleepX, mSleepY;
+    // 上一次起床设定的时间位置
+    private float mWeakUpX, mWeakUpY;
+    // 睡觉时间点角度
+    private float mSleepAngle;
+    // 起床床时间点角度
+    private float mWeakUpAngle;
+    // 上一次移动时的角度
+    private float mLastMoveAngle;
+    // 旋转的角度
+    private float mDegrees;
 
     private float mNumTextHeight;
 
+    /* Listener ***********************************************************************************/
+    // 就寝时间改动监听
     private TimeChangedListener mChangedListener;
+
 
     public BedTimeDial(Context context) {
         this(context, null);
@@ -104,7 +149,7 @@ public class BedTimeDial extends View {
         mGradientColors[0] = mSleepColor;
         mGradientColors[1] = mWeakColor;
 
-        mSleepHr = typedArray.getInt(R.styleable.BedTimeDial_sleep_hr, 22);
+        mSleepHr = typedArray.getInt(R.styleable.BedTimeDial_sleep_hr, 23);
         mSleepMin = typedArray.getInt(R.styleable.BedTimeDial_sleep_min, 0);
         mWeakUpHr = typedArray.getInt(R.styleable.BedTimeDial_weakUp_hr, 7);
         mWeakUpMin = typedArray.getInt(R.styleable.BedTimeDial_weakUp_min, 0);
@@ -169,7 +214,6 @@ public class BedTimeDial extends View {
         mWeakBtm = Bitmap.createScaledBitmap(mWeakBtm, (int) mStroke, (int) mStroke, false);
 
 
-
         mTextNumPaint = new Paint();
         int numTextSize = 64;
         mTextNumPaint.setTextSize(DensityUtils.sp2px(mContext, numTextSize));
@@ -200,9 +244,7 @@ public class BedTimeDial extends View {
         mHeight = getMeasuredHeight();
         mCenterX = mWidth / 2.0f;
         mCenterY = mHeight / 2.0f;
-
         initParams();
-
     }
 
     /**
@@ -269,7 +311,7 @@ public class BedTimeDial extends View {
                     mCenterY + 0.25f * mNumTextHeight, mTextUnitPaint);
         }
 
-        // 画睡眠时间段弧线
+        // 画就寝时间段弧线
         canvas.save();
         mBedtimePaint.setShader(mSweepGradient);
         canvas.rotate(mDegrees, mCenterX, mCenterY);
@@ -279,7 +321,6 @@ public class BedTimeDial extends View {
 
         // 画睡觉时间点
         canvas.save();
-
         canvas.clipPath(mSleepPath);
         canvas.drawBitmap(mSleepBtm, null, mSleepRect, mSleepPain);
         canvas.restore();
@@ -307,7 +348,7 @@ public class BedTimeDial extends View {
                 mLastMoveAngle = getAngle(event.getX(), event.getY());
                 if (canDrag(event.getX(), event.getY(), mSleepX, mSleepY)) {
                     isSleepTimeMove = true;
-                } else if (canDrag(event.getX(), event.getY(), mWeakUpX, mWeakUpY)){
+                } else if (canDrag(event.getX(), event.getY(), mWeakUpX, mWeakUpY)) {
                     isWeakTimeMove = true;
                 } else if (isInDial(event.getX(), event.getY())) {
                     isBedtimeMove = true;
@@ -318,13 +359,11 @@ public class BedTimeDial extends View {
                 // 移动的角度
                 float diffAngle = getDiffAngle(currentAngle, mLastMoveAngle);
                 if (isSleepTimeMove) {
-                    // 睡觉时间点移动
-                    onSleepMoved(diffAngle);
+                    onSleepMoved(diffAngle); // 睡觉时间点移动
                 } else if (isWeakTimeMove) {
-                    // 起床时间点移动
-                    onWeakUpMoved(diffAngle);
+                    onWeakUpMoved(diffAngle); // 起床时间点移动
                 } else if (isBedtimeMove) {
-                    onBedtimeMoved(diffAngle);
+                    onBedtimeMoved(diffAngle); // 就寝时间带移动
                 }
                 mLastMoveAngle = currentAngle;
                 if (isSleepTimeMove || isWeakTimeMove || isBedtimeMove) {
@@ -353,7 +392,7 @@ public class BedTimeDial extends View {
 
     /**
      * @param diffAngle moved angle
-     * change the params after bedtime moved
+     *                  change the params after bedtime moved
      */
     private void onBedtimeMoved(float diffAngle) {
         mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
@@ -370,7 +409,7 @@ public class BedTimeDial extends View {
 
     /**
      * @param diffAngle moved angle
-     * change the params after weak up moved
+     *                  change the params after weak up moved
      */
     private void onWeakUpMoved(float diffAngle) {
         mWeakUpAngle = (mWeakUpAngle + diffAngle + 720) % 720;
@@ -383,7 +422,7 @@ public class BedTimeDial extends View {
 
     /**
      * @param diffAngle moved angle
-     * change the params after sleep moved
+     *                  change the params after sleep moved
      */
     private void onSleepMoved(float diffAngle) {
         mSleepAngle = (mSleepAngle + diffAngle + 720) % 720;
@@ -613,7 +652,7 @@ public class BedTimeDial extends View {
     }
 
     /**
-     * 获取睡眠时间中心点对面点角度
+     * 获取就寝时间中心点对面点角度
      */
     private float getSweepOppositeAngle(float sleepAngle, float weakUpAngle) {
         float angle;
@@ -629,7 +668,7 @@ public class BedTimeDial extends View {
         return (angle + 180) % 360;
     }
 
-    /* 函数计算 ******************************************************/
+    /* 函数计算 ************************************************************************************/
 
     /**
      * 获取反正切
@@ -653,12 +692,35 @@ public class BedTimeDial extends View {
         return (float) angle;
     }
 
+    /**
+     * 就寝时间变动接口
+     **/
     public interface TimeChangedListener {
 
+        /**
+         * 睡觉时间点变动
+         *
+         * @param hr  变动后的小时值
+         * @param min 变动后的的分钟值
+         */
         void onSleepTimeChanged(int hr, int min);
 
+        /**
+         * 起床时间点变动
+         *
+         * @param hr  变动后的小时值
+         * @param min 变动后的分钟值
+         */
         void onWeakUpTimeChanged(int hr, int min);
 
+        /**
+         * 睡眠时间带变动
+         *
+         * @param sleepHr   变动后的睡觉寝小时值
+         * @param sleepMin  变动后的睡觉分钟值
+         * @param weakUpHr  变动后的起床小时值
+         * @param weakUpMin 变动后的起床分钟值
+         */
         void onBedtimeChanged(int sleepHr, int sleepMin, int weakUpHr, int weakUpMin);
     }
 }
